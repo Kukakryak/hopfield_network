@@ -31,16 +31,29 @@ def beautiful_print(vector=None, matrix=None, symbolic=False):
                 print('\u25A3', end=' ')
 
     if vector:
-        matrix = vector_to_matrix(vector)
-    for row in matrix:
         print()
-        for num in row:
+        for num in vector:
             if symbolic:
                 symbolic_print()
             else:
                 colored_print()
+    else:
+        for row in matrix:
+            print()
+            for num in row:
+                if symbolic:
+                    symbolic_print()
+                else:
+                    colored_print()
     print()
 
+def text_print(matrix=None):
+    for r in matrix:
+        print()
+        for v in r:
+            if v >= 0:
+                v = f' {v}'
+            print(v, end=' ')
 # Умножение векторов
 def vector_multiply(vector: list[int], scnd_vector: list[int]):
     matrix = []
@@ -119,13 +132,14 @@ def tests():
     scnd_short = [-1,1,-1]
     third_short = [-1,1,1]
     fourth_short = [1,-1,1]
+    corrupted = [1,-1,-1,-1]
     first_matrix = vector_multiply(first_short, first_long)
     scnd_matrix = vector_multiply(scnd_short, scnd_long)
     third_matrix = vector_multiply(third_short, third_long)
     fourth_matrix = vector_multiply(fourth_short, fourth_long)
-    beautiful_print(matrix=first_matrix)
-    beautiful_print(matrix=scnd_matrix)
-    beautiful_print(matrix=third_matrix)
-    beautiful_print(matrix=fourth_matrix)
+    summary_matrix = matrix_sum(matrix_sum(matrix_sum(first_matrix, scnd_matrix), third_matrix), fourth_matrix)
+    beautiful_print(matrix=summary_matrix)
+    text_print(summary_matrix)
+    beautiful_print(vector=matrix_multiply(matrix=summary_matrix,vector=corrupted))
 if __name__ == "__main__":
     tests()
