@@ -1,5 +1,5 @@
 # Входные данные
-data_sensor = [0, 0]
+data_sensor = [1, 1]
 
 # Элемент смещения
 bias1 = 1
@@ -22,11 +22,11 @@ output_weights = [[1, -1, -0.5]]
 
 # Комбинированные вводы для скрытых нейронов
 f_combined = (data_sensor[0] * input_weights[0][0] +
-              data_sensor[0] * input_weights[1][0] +
+              data_sensor[1] * input_weights[1][0] +
               input_weights[0][2])
 
 s_combined = (data_sensor[1] * input_weights[1][1] +
-              data_sensor[1] * input_weights[0][1] +
+              data_sensor[0] * input_weights[0][1] +
               input_weights[1][2])
 
 hidden_combined = [f_combined, s_combined]
