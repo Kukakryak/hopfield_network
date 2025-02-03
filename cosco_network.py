@@ -118,8 +118,8 @@ def canonical_net(matrix: list[list[int]]):
 def sign_function(vector: list[int]):
     s_vector = []
     for num in vector:
-        if num >= 0: s_vector.append(1)
-        if num < 0: s_vector.append(-1)
+        if num > 0: s_vector.append(1)
+        if num <= 0: s_vector.append(-1)
     return s_vector
 
 
@@ -139,7 +139,6 @@ def tests():
     fourth_matrix = vector_multiply(fourth_short, fourth_long)
     summary_matrix = matrix_sum(matrix_sum(matrix_sum(first_matrix, scnd_matrix), third_matrix), fourth_matrix)
     beautiful_print(matrix=summary_matrix)
-    text_print(summary_matrix)
-    beautiful_print(vector=matrix_multiply(matrix=summary_matrix,vector=corrupted))
+    beautiful_print(vector=sign_function(matrix_multiply(matrix=summary_matrix,vector=corrupted)))
 if __name__ == "__main__":
     tests()
