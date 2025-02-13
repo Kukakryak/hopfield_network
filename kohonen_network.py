@@ -62,7 +62,9 @@ activity_neuron2 = list(map(lambda x: round(sign_function(x), 5), hidden_combine
 print("Активности нейронов второго скрытого слоя:", activity_neuron2)
 
 # Комбинированный ввод выходного нейрона
-output_combined = None
+output_combined = round(activity_neuron2[0] * output_weights[0][0] + activity_neuron2[1] * output_weights[0][1], 5)
+print("Комбинированный ввод выходного нейрона:", output_combined)
 
 # Активность выходного нейрона
-activity_output_neuron = None
+activity_output_neuron = round(sign_function(output_combined), 5)
+print("Активность выходного нейрона:", activity_output_neuron)
