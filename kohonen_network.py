@@ -16,8 +16,7 @@ bias1 = 1
 bias2 = 1
 
 # Сигмоидная функция активации
-def sign_function(combined_input):
-    return 1 / (1 + pow(euler, -combined_input))
+sign_function = lambda x: 1 / (1 + pow(euler, -x))
 
 # Весовые коэффициенты от входного слоя к первому скрытому слою ( номер столбца - номер входного нейрона, номер строки - номер скрытого нейрона )
 input_weights1 = [
