@@ -11,12 +11,9 @@ training_rate = 0.3
 # Момент
 y = 0.3
 
-# Элемент смещения
-bias1 = 1
-bias2 = 1
-
-# Сигмоидная функция активации
+# Сигмоидная функция активации и её производная
 sign_function = lambda x: 1 / (1 + pow(euler, -x))
+sign_derivative = lambda x: sign_function(x) * (1 - sign_function(x))
 
 # Весовые коэффициенты от входного слоя к первому скрытому слою (номер столбца - номер входного нейрона, номер строки - номер скрытого нейрона)
 input_weights1 = [
@@ -67,3 +64,7 @@ print("Комбинированный ввод выходного нейрона
 # Активность выходного нейрона
 activity_output_neuron = round(sign_function(output_combined), 5)
 print("Активность выходного нейрона:", activity_output_neuron)
+
+# Ошибка выходного нейрона
+error_output_neuron = round((expected_output - activity_output_neuron) * sign_derivative(activity_output_neuron), 5)
+print(error_output_neuron)
