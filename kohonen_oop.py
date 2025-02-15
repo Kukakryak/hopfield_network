@@ -46,7 +46,7 @@ def adjacency_to_weight(matrix: list[list[int]]):
 # Расчет комбинированных вводов, возвращает список объектов Neuron, присвоив полученные активности нейронам
 # input_neurons - список номеров входных нейронов
 # output_neurons - список номеров выходных нейронов
-def calc_combined_inputs(neurons: list[Neuron], input_neurons: list[int], output_neurons: list[int]):
+def calculate_neurons_activities(neurons: list[Neuron], input_neurons: list[int], output_neurons: list[int]):
     for neuro_out in output_neurons:
         combined = 0
         outer = neurons[neuro_out-1]
@@ -93,11 +93,11 @@ def tests():
     neurons[1].activity = data_sensor[1]
 
     # Расчет активностей нейронов скрытых слоев
-    first_hidden_layer = calc_combined_inputs(neurons=neurons, input_neurons=[1,2], output_neurons=[3,4,5])
-    second_hidden_layer = calc_combined_inputs(neurons=first_hidden_layer, input_neurons=[3,4,5], output_neurons=[6,7])
+    first_hidden_layer = calculate_neurons_activities(neurons=neurons, input_neurons=[1, 2], output_neurons=[3, 4, 5])
+    second_hidden_layer = calculate_neurons_activities(neurons=first_hidden_layer, input_neurons=[3, 4, 5], output_neurons=[6, 7])
 
     # И наконец, расчет активности выходного нейрона сети
-    network_output = calc_combined_inputs(neurons=second_hidden_layer, input_neurons=[6,7], output_neurons=[8])
+    network_output = calculate_neurons_activities(neurons=second_hidden_layer, input_neurons=[6, 7], output_neurons=[8])
 
     # Вывод всех активностей нейронов сети
     for n in network_output:
