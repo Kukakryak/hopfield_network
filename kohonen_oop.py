@@ -43,7 +43,7 @@ def adjacency_to_weight(matrix: list[list[int]]):
     return matrix
 
 
-# Расчет комбинированных вводов, возвращает список объектов Neuron, присвоив полученные активности нейронам
+# Расчет активностей нейронов, возвращает список объектов Neuron, присвоив полученные активности нейронам
 # input_neurons - список номеров входных нейронов
 # output_neurons - список номеров выходных нейронов
 def calculate_neurons_activities(neurons: list[Neuron], input_neurons: list[int], output_neurons: list[int]):
