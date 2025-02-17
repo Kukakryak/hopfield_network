@@ -1,5 +1,5 @@
 from math import e as euler
-
+from tabulate import tabulate
 # Сигмоидная функция активации и её производная
 sign_function = lambda x: 1 / (1 + pow(euler, -x))
 sign_derivative = lambda x: x * (1 - x)
@@ -13,17 +13,14 @@ class Neuron:
     number: int
     activity: float
     weights: list[float]
-    error: float = None
+    error: float = 0
     def __init__(self, number: int, weights: list[float], value: float):
         self.number = number
         self.activity = value
         self.weights = weights
 
     def __str__(self):
-        if self.error:
-            return f'Активность нейрона {self.number} = {self.activity}\nОшибка нейрона = {self.error}\n'
-        else:
-            return f'Активность нейрона {self.number} = {self.activity}'
+        return f'Активность нейрона {self.number} = {self.activity}\nОшибка нейрона = {self.error}\n'
 
     def set_error(self, error: float):
         self.error = rnd(error)
@@ -59,7 +56,7 @@ def calculate_neurons_activities(neurons: list[Neuron], input_neurons: list[int]
             inner = neurons[neuro_in-1]
             combined += inner.activity * inner.weights[neuro_out - 1]
         else:
-            print(f'Комбинированный ввод для нейрона {outer.number} =', rnd(combined))
+            # print(f'Комбинированный ввод для нейрона {outer.number} =', rnd(combined))
             outer.activity = rnd(sign_function(combined))
     return neurons
 
@@ -80,7 +77,13 @@ def calculate_backpropagations(neurons: list[Neuron], output_neuron: int):
             next_layer = []
     return neurons
 
-
+def calculate_correction_values(neurons:list[Neuron]):
+    for n in neurons:
+        for i in range(len(n.weights)):
+            if n.weights[i] != 0:
+                n.weights[i] = rnd(n.weights[i] + rnd(training_rate * neurons[i].error * n.activity))
+                print(f'W[{n.number},{neurons[i].number}] = {rnd(training_rate * neurons[i].error * n.activity)}')
+    return neurons
 # Входные данные
 data_sensor = [0.6, 0.7]
 
@@ -117,12 +120,21 @@ def tests():
 
     # Расчет активности выходного нейрона сети
     output_neuron = calculate_neurons_activities(neurons=second_hidden_layer, input_neurons=[6, 7], output_neurons=[8])
-    for n in output_neuron:
-        print(n)
+    # for n in output_neuron:
+    #     print(n)
 
     # Ошибки всех нейронов сети
     errors = calculate_backpropagations(neurons=neurons, output_neuron=8)
     for n in errors:
         print(n)
+
+    corrected = calculate_correction_values(neurons=neurons)
+    print()
+    weight_matrix = []
+    headers = []
+    for n in corrected:
+        headers.append(n.number)
+        weight_matrix.append(n.weights)
+    print(tabulate(weight_matrix, headers=headers, tablefmt='fancy_grid', showindex=headers), '\n')
 if __name__ == '__main__':
     tests()
