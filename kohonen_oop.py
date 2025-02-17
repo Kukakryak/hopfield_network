@@ -1,5 +1,5 @@
 from math import e as euler
-from tabulate import tabulate
+# from tabulate import tabulate
 from time import sleep
 # Сигмоидная функция активации и её производная
 sign_function = lambda x: 1 / (1 + pow(euler, -x))
