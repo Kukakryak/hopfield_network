@@ -1,5 +1,6 @@
 from math import e as euler
 from tabulate import tabulate
+from time import sleep
 # Сигмоидная функция активации и её производная
 sign_function = lambda x: 1 / (1 + pow(euler, -x))
 sign_derivative = lambda x: x * (1 - x)
@@ -7,33 +8,33 @@ sign_derivative = lambda x: x * (1 - x)
 # Округление числа до 5 цифр после запятой
 rnd = lambda x: round(x, 5)
 
-
 # Класс объектов-нейронов, у каждого нейрона есть номер, активность и весовой вектор
 class Neuron:
     number: int
     activity: float
     weights: list[float]
-    error: float = 0
+    error: float = 0.0
+    last_correction: list[float]
     def __init__(self, number: int, weights: list[float], value: float):
         self.number = number
         self.activity = value
         self.weights = weights
+        self.last_correction = [0] * len(weights)
 
     def __str__(self):
         return f'Активность нейрона {self.number} = {self.activity}\nОшибка нейрона = {self.error}\n'
 
     def set_error(self, error: float):
-        self.error = rnd(error)
+        self.error = error
     @staticmethod
     def create_neuron(number: int, weights: list[float], value: float = 0.0):
         return Neuron(number, weights, value)
 
 # Создание списка нейронов на основе весовой матрицы, каждый нейрон получает свой весовой вектор.
-def neurons_by_weights(adj_matrix: list[list[float]]):
-    weights = adjacency_to_weight(adj_matrix)
+def neurons_by_weights(weight_matrix: list[list[float]]):
     neurons = []
-    for i in range(len(weights)):
-        neurons.append(Neuron.create_neuron(number=i+1, weights=weights[i]))
+    for i in range(len(weight_matrix)):
+        neurons.append(Neuron.create_neuron(number=i+1, weights=weight_matrix[i]))
     return neurons
 
 
@@ -70,7 +71,7 @@ def calculate_backpropagations(neurons: list[Neuron], output_neuron: int):
     next_layer = []
     for i in range(output_neuron-2, 1, -1):
         output_weights = sum(map(lambda x: neurons[x].error * neurons[i].weights[x], layer))
-        neurons[i].set_error(output_weights * sign_derivative(neurons[i].activity))
+        neurons[i].error = output_weights * sign_derivative(neurons[i].activity)
         next_layer.append(i)
         if neurons[i-1].weights[layer[0]] == 0:
             layer = next_layer
@@ -78,11 +79,16 @@ def calculate_backpropagations(neurons: list[Neuron], output_neuron: int):
     return neurons
 
 def calculate_correction_values(neurons:list[Neuron]):
+    global y
     for n in neurons:
         for i in range(len(n.weights)):
             if n.weights[i] != 0:
-                n.weights[i] = rnd(n.weights[i] + rnd(training_rate * neurons[i].error * n.activity))
-                print(f'W[{n.number},{neurons[i].number}] = {rnd(training_rate * neurons[i].error * n.activity)}')
+                correction = training_rate * neurons[i].error * n.activity + y * n.last_correction[i]
+                n.weights[i] = n.weights[i] + training_rate * neurons[i].error * n.activity
+                n.last_correction.append(correction)
+                # print(f'W[{n.number},{neurons[i].number}] = {correction}')
+            else:
+                n.last_correction.append(0.0)
     return neurons
 # Входные данные
 data_sensor = [0.6, 0.7]
@@ -91,7 +97,7 @@ data_sensor = [0.6, 0.7]
 expected_output = 0.9
 
 # Норма обучения
-training_rate = 0.3
+training_rate = 0.05
 
 # Момент
 y = 0.3
@@ -108,7 +114,8 @@ adjacency_matrix = [[0, 0, -1, 2.5, 1, 0, 0, 0],
 
 def tests():
     # Формируем список нейронов на основе смежной матрицы сети
-    neurons = neurons_by_weights(adjacency_matrix)
+    weight_matrix = adjacency_to_weight(adjacency_matrix)
+    neurons = neurons_by_weights(weight_matrix)
 
     # Присваиваем входным нейронам входные значения
     neurons[0].activity = data_sensor[0]
@@ -136,5 +143,22 @@ def tests():
         headers.append(n.number)
         weight_matrix.append(n.weights)
     print(tabulate(weight_matrix, headers=headers, tablefmt='fancy_grid', showindex=headers), '\n')
+    neurons = neurons_by_weights(weight_matrix)
+    while True:
+        neurons[0].activity = data_sensor[0]
+        neurons[1].activity = data_sensor[1]
+        neurons = calculate_neurons_activities(neurons=neurons, input_neurons=[1, 2],
+                                                          output_neurons=[3, 4, 5])
+        neurons = calculate_neurons_activities(neurons=neurons, input_neurons=[3, 4, 5],
+                                                           output_neurons=[6, 7])
+        neurons = calculate_neurons_activities(neurons=neurons, input_neurons=[6, 7],
+                                                     output_neurons=[8])
+        neurons = calculate_backpropagations(neurons=neurons, output_neuron=8)
+        neurons = calculate_correction_values(neurons=neurons)
+        weight_matrix = []
+        for n in corrected:
+            weight_matrix.append(n.weights)
+        print(neurons[7].activity)
+        sleep(0.001)
 if __name__ == '__main__':
     tests()
