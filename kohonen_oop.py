@@ -13,14 +13,20 @@ class Neuron:
     number: int
     activity: float
     weights: list[float]
+    error: float = None
     def __init__(self, number: int, weights: list[float], value: float):
         self.number = number
         self.activity = value
         self.weights = weights
 
     def __str__(self):
-        return f'Активность нейрона {self.number} = {self.activity}'
+        if self.error:
+            return f'Активность нейрона {self.number} = {self.activity}\nОшибка нейрона = {self.error}\n'
+        else:
+            return f'Активность нейрона {self.number} = {self.activity}'
 
+    def set_error(self, error: float):
+        self.error = rnd(error)
     @staticmethod
     def create_neuron(number: int, weights: list[float], value: float = 0.0):
         return Neuron(number, weights, value)
@@ -28,7 +34,7 @@ class Neuron:
 # Создание списка нейронов на основе весовой матрицы, каждый нейрон получает свой весовой вектор.
 # За счет этого в расчетах можно указывать номера нейронов as is, как бы мы это делали, проводя расчеты вручную.
 def neurons_by_weights(adj_matrix: list[list[float]]):
-    weights = adjacency_to_weight(adjacency_matrix)
+    weights = adjacency_to_weight(adj_matrix)
     neurons = []
     for i in range(len(weights)):
         neurons.append(Neuron.create_neuron(number=i+1, weights=weights[i]))
@@ -36,7 +42,7 @@ def neurons_by_weights(adj_matrix: list[list[float]]):
 
 
 # Приведение смежной матрицы к весовой, удаление двунаправленных связей между нейронами.
-def adjacency_to_weight(matrix: list[list[int]]):
+def adjacency_to_weight(matrix: list[list[float]]):
     for i in range(len(matrix)):
         for k in range(len(matrix[i])):
             if matrix[i][k] != 0: matrix[k][i] = 0
@@ -59,18 +65,34 @@ def calculate_neurons_activities(neurons: list[Neuron], input_neurons: list[int]
     return neurons
 
 
+# Расчет ошибок нейронов, возвращает список объектов Neuron, присвоив им полученные ошибки
+def calculate_backpropagations(neurons: list[Neuron], output_neuron: int):
+    global expected_output
+    neurons[output_neuron-1].set_error(((expected_output - neurons[output_neuron-1].activity) *
+                    sign_derivative(neurons[output_neuron-1].activity)))
+    layer = [output_neuron-1]
+    next_layer = []
+    for i in range(output_neuron-2, 1, -1):
+        output_weights = sum(map(lambda x: neurons[x].error * neurons[i].weights[x], layer))
+        neurons[i].set_error(output_weights * sign_derivative(neurons[i].activity))
+        next_layer.append(i)
+        if neurons[i-1].weights[layer[0]] == 0:
+            layer = next_layer
+            next_layer = []
+    return neurons
+
+
 # Входные данные
 data_sensor = [0.6, 0.7]
 
-# # Ожидаемый выход сети
-# expected_output = 0.9
-#
-# # Норма обучения
-# training_rate = 0.3
-#
-# # Момент
-# y = 0.3
+# Ожидаемый выход сети
+expected_output = 0.9
 
+# Норма обучения
+training_rate = 0.3
+
+# Момент
+y = 0.3
 
 # Смежная матрица сети
 # Было решено использовать смежные матрицы сетей, дабы добиться/попробовать добиться универсальности кода
@@ -96,11 +118,14 @@ def tests():
     first_hidden_layer = calculate_neurons_activities(neurons=neurons, input_neurons=[1, 2], output_neurons=[3, 4, 5])
     second_hidden_layer = calculate_neurons_activities(neurons=first_hidden_layer, input_neurons=[3, 4, 5], output_neurons=[6, 7])
 
-    # И наконец, расчет активности выходного нейрона сети
-    network_output = calculate_neurons_activities(neurons=second_hidden_layer, input_neurons=[6, 7], output_neurons=[8])
+    # Расчет активности выходного нейрона сети
+    output_neuron = calculate_neurons_activities(neurons=second_hidden_layer, input_neurons=[6, 7], output_neurons=[8])
+    for n in output_neuron:
+        print(n)
 
-    # Вывод всех активностей нейронов сети
-    for n in network_output:
+    # Ошибки всех нейронов сети
+    errors = calculate_backpropagations(neurons=neurons, output_neuron=8)
+    for n in errors:
         print(n)
 if __name__ == '__main__':
     tests()
