@@ -137,12 +137,12 @@ def tests():
 
     corrected = calculate_correction_values(neurons=neurons)
     print()
-    weight_matrix = []
-    headers = []
-    for n in corrected:
-        headers.append(n.number)
-        weight_matrix.append(n.weights)
-    print(tabulate(weight_matrix, headers=headers, tablefmt='fancy_grid', showindex=headers), '\n')
+    # weight_matrix = []
+    # headers = []
+    # for n in corrected:
+    #     headers.append(n.number)
+    #     weight_matrix.append(n.weights)
+    # print(tabulate(weight_matrix, headers=headers, tablefmt='fancy_grid', showindex=headers), '\n')
     neurons = neurons_by_weights(weight_matrix)
     while True:
         neurons[0].activity = data_sensor[0]
