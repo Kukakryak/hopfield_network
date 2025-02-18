@@ -84,7 +84,7 @@ def calculate_correction_values(neurons:list[Neuron]):
         for i in range(len(n.weights)):
             if n.weights[i] != 0:
                 correction = training_rate * neurons[i].error * n.activity + y * n.last_correction[i]
-                n.weights[i] = n.weights[i] + training_rate * neurons[i].error * n.activity
+                n.weights[i] = n.weights[i] + correction
                 n.last_correction.append(correction)
                 # print(f'W[{n.number},{neurons[i].number}] = {correction}')
             else:
@@ -156,7 +156,7 @@ def tests():
         neurons = calculate_backpropagations(neurons=neurons, output_neuron=8)
         neurons = calculate_correction_values(neurons=neurons)
         weight_matrix = []
-        for n in corrected:
+        for n in neurons:
             weight_matrix.append(n.weights)
         print(neurons[7].activity)
         sleep(0.001)
