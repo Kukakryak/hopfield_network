@@ -1,14 +1,9 @@
 from math import e as euler
 from tabulate import tabulate
-from time import sleep
-
+from time import sleep, time
 # Сигмоидная функция активации и её производная
 sign_function = lambda x: 1 / (1 + pow(euler, -x))
 sign_derivative = lambda x: x * (1 - x)
-
-# Округление числа до 5 цифр после запятой
-rnd = lambda x: round(x, 5)
-
 
 # Класс объектов-нейронов, у каждого нейрона есть номер, активность и весовой вектор
 class Neuron:
@@ -60,7 +55,7 @@ def calculate_neurons_activities(neurons: list[Neuron], input_neurons: list[int]
             combined += inner.activity * inner.weights[neuro_out - 1]
         else:
             # print(f'Комбинированный ввод для нейрона {outer.number} =', rnd(combined))
-            outer.activity = rnd(sign_function(combined))
+            outer.activity = sign_function(combined)
     return neurons
 
 
@@ -147,7 +142,10 @@ def tests():
     neurons[0].activity = data_sensor[0]
     neurons[1].activity = data_sensor[1]
     iterations = 0
-    while neurons[7].activity != expected_output:
+    start_time = time()
+    learning_limit = 99.99
+    network_progress = 0
+    while network_progress != learning_limit:
         iterations += 1
         neurons = calculate_neurons_activities(neurons=neurons, input_neurons=[1, 2],
                                                output_neurons=[3, 4, 5])
@@ -157,9 +155,11 @@ def tests():
                                                output_neurons=[8])
         neurons = calculate_backpropagations(neurons=neurons, output_neuron=8)
         neurons = calculate_correction_values(neurons=neurons)
-        print(neurons[7].activity)
-        sleep(0.0001)
-    print('Количество эпох:', iterations)
+        output = neurons[7]
+        network_progress = round(output.activity/expected_output*100, 2)
+        print(f'Выход сети: {round(output.activity,5)}\tОшибка: {output.error}\t'
+              f'Прогресс: {network_progress}%\tВремя обучения:{round(time()-start_time,2)}s\n')
+
     headers = []
     weight_matrix = []
     for n in neurons:
