@@ -86,9 +86,9 @@ def calculate_correction_values(neurons: list[Neuron]):
                 n.last_correction.append(correction)
                 # print(f'W[{n.number},{neurons[i].number}] = {correction}')
             else:
-                n.last_correction.append(0.0)
+                if len(n.weights) != len(neurons):
+                    n.last_correction.append(0.0)
     return neurons
-
 
 # Входные данные
 data_sensor = [0.6, 0.7]
@@ -141,23 +141,39 @@ def tests():
     neurons = neurons_by_weights(weight_matrix)
     neurons[0].activity = data_sensor[0]
     neurons[1].activity = data_sensor[1]
-    iterations = 0
+    output = neurons[7]
     start_time = time()
-    learning_limit = 99.99
     network_progress = 0
-    while network_progress != learning_limit:
-        iterations += 1
-        neurons = calculate_neurons_activities(neurons=neurons, input_neurons=[1, 2],
-                                               output_neurons=[3, 4, 5])
-        neurons = calculate_neurons_activities(neurons=neurons, input_neurons=[3, 4, 5],
-                                               output_neurons=[6, 7])
-        neurons = calculate_neurons_activities(neurons=neurons, input_neurons=[6, 7],
-                                               output_neurons=[8])
-        neurons = calculate_backpropagations(neurons=neurons, output_neuron=8)
-        neurons = calculate_correction_values(neurons=neurons)
-        output = neurons[7]
-        network_progress = round(output.activity/expected_output*100, 2)
-        print(f'Выход сети: {round(output.activity,5)}\tОшибка: {output.error}\t'
+    iter_errors = []
+    def iteration(nrns):
+        nrns = calculate_neurons_activities(neurons=nrns, input_neurons=[1, 2],
+                                            output_neurons=[3, 4, 5])
+        nrns = calculate_neurons_activities(neurons=nrns, input_neurons=[3, 4, 5],
+                                            output_neurons=[6, 7])
+        nrns = calculate_neurons_activities(neurons=nrns, input_neurons=[6, 7],
+                                            output_neurons=[8])
+        nrns = calculate_backpropagations(neurons=nrns, output_neuron=8)
+        nrns = calculate_correction_values(neurons=nrns)
+        return nrns
+
+    # Функция предназначена для остановки цикла обучения, если нейросеть остановилась на одном месте
+    # и не пришла к ожидаемому выводу
+    def compare_errors():
+        if len(iter_errors) == 10:
+            if len(set(iter_errors)) == 1:
+                return True
+            else:
+                iter_errors.clear()
+        else:
+            iter_errors.append(neurons[6].error)
+            return False
+
+    learning_limit = float(input("Задайте лимит процента обучения нейросети (0 == без лимита): "))
+    while not compare_errors():
+        if (network_progress == learning_limit) & (learning_limit != 0): break
+        neurons = iteration(neurons)
+        network_progress = round(output.activity/expected_output*100,2)
+        print(f'Выход сети: {output.activity}\tОшибка: {output.error}\t'
               f'Прогресс: {network_progress}%\tВремя обучения:{round(time()-start_time,2)}s\n')
 
     headers = []
