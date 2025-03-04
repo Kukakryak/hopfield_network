@@ -1,6 +1,7 @@
 from math import e as euler
 from tabulate import tabulate
 from time import sleep, time
+import csv
 # Сигмоидная функция активации и её производная
 sign_function = lambda x: 1 / (1 + pow(euler, -x))
 sign_derivative = lambda x: x * (1 - x)
@@ -13,19 +14,36 @@ class Neuron:
     error: float = 0.0
     last_correction: list[float]
 
-    def __init__(self, number: int, weights: list[float], value: float):
+    def __init__(self, number: int, weights: list[float], activity: float):
         self.number = number
-        self.activity = value
+        self.activity = activity
         self.weights = weights
         self.last_correction = [0] * len(weights)
 
     def __str__(self):
-        return f'Активность нейрона {self.number} = {self.activity}\nОшибка нейрона = {self.error}\n'
+        return (f'number: {self.number}; activity: {self.activity}; weights: {self.weights}; '
+                f'error: {self.error}; last_correction: {self.last_correction}')
+
+    def generate_dict(self):
+        ndict = {'number': self.number,
+                'activity': self.activity,
+                'weights': self.weights,
+                'error': self.error,
+                'last_correction': self.last_correction}
+        return ndict
+    @staticmethod
+    def create_neuron(number: int, weights: list[float], activity: float = 0.0):
+        return Neuron(number, weights, activity)
 
     @staticmethod
-    def create_neuron(number: int, weights: list[float], value: float = 0.0):
-        return Neuron(number, weights, value)
-
+    def create_neuron_by_dict(n_dict: dict):
+        weights = [float(n.replace(']', '').replace('[', '')) for n in n_dict.get('weights').split(',')]
+        last_correction = [float(n.replace(']', '').replace('[', '')) for n in n_dict.get('last_correction').split(',')]
+        n = Neuron(number=int(n_dict.get('number')), activity=float(n_dict.get('activity')),
+                      weights=weights)
+        n.error = float(n_dict.get('error'))
+        n.last_correction = last_correction
+        return n
 
 # Создание списка нейронов на основе весовой матрицы, каждый нейрон получает свой весовой вектор.
 def neurons_by_weights(weight_matrix: list[list[float]]):
@@ -83,15 +101,50 @@ def calculate_correction_values(neurons: list[Neuron]):
             if n.weights[i] != 0:
                 correction = training_rate * neurons[i].error * n.activity + y * n.last_correction[i]
                 n.weights[i] = n.weights[i] + correction
-                n.last_correction.append(correction)
+                n.last_correction[i] = correction
                 # print(f'W[{n.number},{neurons[i].number}] = {correction}')
             else:
                 if len(n.weights) != len(neurons):
                     n.last_correction.append(0.0)
     return neurons
 
+class NeuroDialect(csv.Dialect):
+    delimiter = ";"
+    escapechar = '\\'
+    doublequote = False
+    skipinitialspace = True
+    lineterminator = '\n'
+    quoting = csv.QUOTE_NONE
+
+def save_trained_network(nrns: list[Neuron]):
+    with open(file='trained_network.csv', mode='w') as file:
+        fields = nrns[0].generate_dict().keys()
+        w = csv.DictWriter(f=file, fieldnames=fields, dialect=NeuroDialect())
+        w.writeheader()
+        for neuro in nrns:
+            w.writerow(neuro.generate_dict())
+    file.close()
+
+def file_based_network():
+    neurons = []
+    with open(file='trained_network.csv', mode='r', encoding='1251') as file:
+        reader = csv.DictReader(file, delimiter=';')
+        for row in reader:
+            neurons.append(Neuron.create_neuron_by_dict(row))
+    return neurons
+
 # Входные данные
-data_sensor = [0.6, 0.7]
+data_sensor = [
+  [0.11, 0.32],
+  [0.68, 0.89],
+  [0.03, 0.44],
+  [0.69, 0.70],
+  [0.32, 0.05],
+  [0.89, 0.50],
+  [0.43, 0.32],
+  [0.60, 0.55]
+]
+
 
 # Ожидаемый выход сети
 expected_output = 0.9
@@ -114,35 +167,12 @@ adjacency_matrix = [[0, 0, -1, 2.5, 1, 0, 0, 0],
 
 
 def tests():
-    # Формируем список нейронов на основе смежной матрицы сети
-    weight_matrix = adjacency_to_weight(adjacency_matrix)
-    neurons = neurons_by_weights(weight_matrix)
-
-    # Присваиваем входным нейронам входные значения
-    neurons[0].activity = data_sensor[0]
-    neurons[1].activity = data_sensor[1]
-
-    # Расчет активностей нейронов скрытых слоев
-    first_hidden_layer = calculate_neurons_activities(neurons=neurons, input_neurons=[1, 2], output_neurons=[3, 4, 5])
-    second_hidden_layer = calculate_neurons_activities(neurons=first_hidden_layer, input_neurons=[3, 4, 5],
-                                                       output_neurons=[6, 7])
-
-    # Расчет активности выходного нейрона сети
-    output_neuron = calculate_neurons_activities(neurons=second_hidden_layer, input_neurons=[6, 7], output_neurons=[8])
-    # for n in output_neuron:
-    #     print(n)
-
-    # Ошибки всех нейронов сети
-    errors = calculate_backpropagations(neurons=neurons, output_neuron=8)
-    for n in errors:
-        print(n)
-
-    corrected = calculate_correction_values(neurons=neurons)
-    neurons = neurons_by_weights(weight_matrix)
-    neurons[0].activity = data_sensor[0]
-    neurons[1].activity = data_sensor[1]
+    neurons = file_based_network()
+    # weight_matrix = adjacency_to_weight(adjacency_matrix)
+    # neurons = neurons_by_weights(weight_matrix)
+    neurons[0].activity = data_sensor[0][0]
+    neurons[1].activity = data_sensor[0][1]
     output = neurons[7]
-    start_time = time()
     network_progress = 0
     iter_errors = []
     def iteration(nrns):
@@ -169,19 +199,21 @@ def tests():
             return False
 
     learning_limit = float(input("Задайте лимит процента обучения нейросети (0 == без лимита): "))
+    start_time = time()
     while not compare_errors():
         if (network_progress == learning_limit) & (learning_limit != 0): break
         neurons = iteration(neurons)
         network_progress = round(output.activity/expected_output*100,2)
         print(f'Выход сети: {output.activity}\tОшибка: {output.error}\t'
               f'Прогресс: {network_progress}%\tВремя обучения:{round(time()-start_time,2)}s\n')
-
+    save_trained_network(neurons)
     headers = []
     weight_matrix = []
     for n in neurons:
         headers.append(n.number)
         weight_matrix.append(n.weights)
     print(tabulate(weight_matrix, headers=headers, tablefmt='fancy_grid', showindex=headers))
+    file_based_network()
 
 
 if __name__ == '__main__':
