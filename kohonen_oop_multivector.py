@@ -229,17 +229,20 @@ def tests():
     epochs = 0
     while not compare_errors():
         if (epochs == learning_limit) & (learning_limit != 0): break
-        activities = sum([n[7].activity for n in networks_list])
-        errors = sum([n[7].error for n in networks_list])
+        activities = [n[7].activity for n in networks_list]
+        errors = sum([n[7].error for n in networks_list])/len(networks_list)
         epochs+=1
         for i in range(len(networks_list)):
             networks_list[i] = iteration(networks_list[i],i)
-            network_progress = round(activities/sum(expected_output)*100,2)
-        print(f'Сумма выходов векторов сети: {activities}\tСумма ошибок: {errors}\t'
-              f'Эпоха: {epochs}\tПрогресс: {network_progress}%\tВремя обучения:{round(time()-start_time,2)}s\n')
+            network_progress = round(sum([activities[n]/expected_output[n]*100
+                                    for n in range(len(networks_list))])/len(networks_list), 2)
+        print(f'Эпоха: {epochs}\tОшибка: {errors}\tПрогресс: {network_progress}%'
+              f'\tВремя обучения:{round(time()-start_time,2)}s\n')
 
     if int(input("Сохранить сеть последней эпохи? (1 или 0): ")) == 1:
         save_multivector_network(networks_list)
+    print('Активности векторов сети: ')
+    print([n[7].activity for n in networks_list])
     # for net in networks_list:
     #     headers = []
     #     weight_matrix = []
