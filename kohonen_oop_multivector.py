@@ -171,10 +171,10 @@ expected_output = [0.2, 0.7, 0.2, 0.7, 0.2, 0.7, 0.2, 0.7]
 
 outputs_amount = 8
 # Норма обучения
-training_rate = 0.05
+training_rate = 0.7
 
 # Момент
-y = 0.3
+y = 0.1
 
 # Смежная матрица сети
 adjacency_matrix = [[0, 0, -1, 2.5, 1, 0, 0, 0],
@@ -229,13 +229,13 @@ def tests():
     epochs = 0
     while not compare_errors():
         if (epochs == learning_limit) & (learning_limit != 0): break
-        activities = [n[7].activity for n in networks_list]
-        errors = sum([n[7].error for n in networks_list])/len(networks_list)
-        epochs+=1
         for i in range(len(networks_list)):
             networks_list[i] = iteration(networks_list[i],i)
-            network_progress = round(sum([activities[n]/expected_output[n]*100
-                                    for n in range(len(networks_list))])/len(networks_list), 2)
+        activities = [n[7].activity for n in networks_list]
+        errors = sum([n[7].error for n in networks_list]) / len(networks_list)
+        network_progress = sum([abs(expected_output[n] - activities[n]) for n in range(len(activities))])
+        network_progress = round((1 - network_progress/sum(expected_output)) * 100, 2)
+        epochs += 1
         print(f'Эпоха: {epochs}\tОшибка: {errors}\tПрогресс: {network_progress}%'
               f'\tВремя обучения:{round(time()-start_time,2)}s\n')
 
@@ -243,6 +243,7 @@ def tests():
         save_multivector_network(networks_list)
     print('Активности векторов сети: ')
     print([n[7].activity for n in networks_list])
+    print(networks_list[7][7].activity / expected_output[7] * 100)
     # for net in networks_list:
     #     headers = []
     #     weight_matrix = []
