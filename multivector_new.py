@@ -1,7 +1,6 @@
 from math import e as euler
 from tabulate import tabulate
 from time import sleep, time
-from os import makedirs
 import csv
 # Сигмоидная функция активации и её производная
 sign_function = lambda x: 1 / (1 + pow(euler, -x))
@@ -169,16 +168,10 @@ adjacency_matrix = [[0, 0, -1, 2.5, 1, 0, 0, 0],
 
 def tests():
     weight_matrix = adjacency_to_weight(adjacency_matrix)
-    networks_list = []
-    for i in range(len(data_sensor)):
-        neurons = neurons_by_weights(weight_matrix)
-        neurons[0].activity = data_sensor[i][0]
-        neurons[1].activity = data_sensor[i][1]
-        networks_list.append(neurons)
     neurons = neurons_by_weights(weight_matrix)
     if int(input("Загрузить сохраненную сеть? (1 или 0): ")) == 1:
         try:
-            networks_list = file_based_network()
+            neurons = file_based_network()
         except FileNotFoundError:
             print("Ошибка! Файл с данными нейронной сети отсутствует. Составляем на основе весовой матрицы...")
     def iteration(inp: list[float], nrns: list[Neuron], num: int):
@@ -224,18 +217,21 @@ def tests():
     activities = [0.0] * outputs_amount
     errors = [0.0] * outputs_amount
     while not compare_errors():
-        if (network_progress == learning_limit) & (learning_limit != 0): break
-        for i in range(len(neurons)):
-            neurons = iteration(inp=data_sensor[i], nrns=neurons, num=i)
-            activities[i] = neurons[7].activity
-            errors[i] = neurons[7].error
-        avg_err = float(sum(errors) / len(networks_list))
-        network_progress = sum([abs(expected_output[n] - activities[n]) for n in range(len(activities))])
-        network_progress = round((1 - network_progress/sum(expected_output)) * 100, 2)
-        epochs += 1
-        print(f'Ошибка: {avg_err}\tПрогресс: {network_progress}%'
-              f'\tВремя обучения:{round(time()-start_time,2)}s\n')
-        save_trained_network(neurons)
+        try:
+            if (network_progress == learning_limit) & (learning_limit != 0): break
+            for i in range(len(neurons)):
+                neurons = iteration(inp=data_sensor[i], nrns=neurons, num=i)
+                activities[i] = neurons[7].activity
+                errors[i] = neurons[7].error
+            avg_err = float(sum(errors) / len(neurons))
+            network_progress = sum([abs(expected_output[n] - activities[n]) for n in range(len(activities))])
+            network_progress = round((1 - network_progress/sum(expected_output)) * 100, 2)
+            epochs += 1
+            print(f'Ошибка: {avg_err}\tПрогресс: {network_progress}%'
+                  f'\tВремя обучения:{round(time()-start_time,2)}s\n')
+            save_trained_network(neurons)
+        except KeyboardInterrupt:
+            save_trained_network(neurons)
     headers = []
     weight_matrix = []
     for n in neurons:
