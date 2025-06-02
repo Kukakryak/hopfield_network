@@ -41,15 +41,16 @@ def dfs(x, y, current_object, threshold=30):
         for nx, ny in get_neighbors(cx, cy):
             if not visited[ny][nx] and color_diff(img[ny][nx], img[cy][cx]) < threshold:
                 stack.append((nx, ny))
-    colors = [0, 0, 0]
-    for c in current_object:
-        pixel = np.array(img[c[1]][c[0]], dtype=int)
-        colors[0] += pixel[0]
-        colors[1] += pixel[1]
-        colors[2] += pixel[2]
-    avg_color = [int(ch/len(current_object)) for ch in colors]
-    for c in current_object:
-        img[c[1]][c[0]] = tuple(avg_color)
+    if len(np.unique([img[c[1]][c[0]] for c in current_object])) > 3:
+        colors = [0, 0, 0]
+        for c in current_object:
+            pixel = np.array(img[c[1]][c[0]], dtype=int)
+            colors[0] += pixel[0]
+            colors[1] += pixel[1]
+            colors[2] += pixel[2]
+        avg_color = [int(ch/len(current_object)) for ch in colors]
+        for c in current_object:
+            img[c[1]][c[0]] = tuple(avg_color)
 
 
 def extract_and_save_objects():
