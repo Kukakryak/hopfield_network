@@ -13,7 +13,7 @@ y = 0.3
 
 # Сигмоидная функция активации и её производная
 sign_function = lambda x: 1 / (1 + pow(euler, -x))
-sign_derivative = lambda x: sign_function(x) * (1 - sign_function(x))
+sign_derivative = lambda x: x * (1 - x)
 
 # Весовые коэффициенты от входного слоя к первому скрытому слою (номер столбца - номер входного нейрона, номер строки - номер скрытого нейрона)
 input_weights1 = [
@@ -68,3 +68,7 @@ print("Активность выходного нейрона:", activity_output
 # Ошибка выходного нейрона
 error_output_neuron = round((expected_output - activity_output_neuron) * sign_derivative(activity_output_neuron), 5)
 print(error_output_neuron)
+error_hidden_neurons = round(error_output_neuron * output_weights[0][0] * sign_derivative(activity_neuron2[0]), 5)
+error_hidden_neurons2 = round(error_output_neuron * output_weights[0][1] * sign_derivative(activity_neuron2[1]), 5)
+print(error_hidden_neurons)
+print(error_hidden_neurons2)

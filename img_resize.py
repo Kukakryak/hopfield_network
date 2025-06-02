@@ -144,7 +144,7 @@ def tests():
     # reduced = resize_matrix(matr=gradient_x, new_scale=(5,20))
     # show_matrix(matr=gradient_x, title='Исходная матрица')
     # show_matrix(matr=reduced, title='Уменьшенная матрица')
-    resize_image(img="test_picture.jpg", new_scale=(400,200))
+    resize_image(img=".\objects\object_20.png", new_scale=(200,500))
 
 
 
